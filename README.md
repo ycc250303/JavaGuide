@@ -1,2 +1,25 @@
 # JavaGuide
+
 以JavaGuide为主的笔记+八股
+
+## 项目组成
+
+[Java语言](https://github.com/ycc250303/JavaGuide/tree/main/Java)
+
+[数据库](https://github.com/ycc250303/JavaGuide/tree/main/%E6%95%B0%E6%8D%AE%E5%BA%93)
+
+[系统设计](https://github.com/ycc250303/JavaGuide/tree/main/%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1)
+
+[设计模式](https://github.com/ycc250303/JavaGuide/tree/main/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F)
+
+[Linux系统](https://github.com/ycc250303/JavaGuide/tree/main/Linux)
+
+## 更新日志
+
+仅包含2025年10月12号之后的更新日志
+
+* 2025年10月12日
+
+* [X] 启动更新日志
+* [ ] Java I/O基础
+* [ ] 数据库基础复习
