@@ -2,6 +2,8 @@
 
 以JavaGuide为主的笔记+八股
 
+链接原文：[JavaGuide原文](https://javaguide.cn/)
+
 ## 项目组成
 
 [Java语言](https://github.com/ycc250303/JavaGuide/tree/main/Java)
