@@ -191,3 +191,128 @@ public BufferedInputStream(InputStream in, int size) {
 没看懂
 
 ## IO模型
+
+**从计算机结构的视角来看的话， I/O 描述了计算机系统与外部设备之间通信的过程。**
+
+**从应用程序的视角来看的话，我们的应用程序对操作系统的内核发起 IO 调用（系统调用），操作系统负责的内核执行具体的 IO 操作。也就是说，我们的应用程序实际上只是发起了 IO 操作的调用而已，具体 IO 的执行是由操作系统的内核来完成的。**
+
+当应用程序发起 I/O 调用后，会经历两个步骤：
+
+1. 内核等待 I/O 设备准备好数据
+2. 内核将数据从内核空间拷贝到用户空间。
+
+UNIX 系统下， IO 模型一共有 5 种： **同步阻塞 I/O** 、 **同步非阻塞 I/O** 、 **I/O 多路复用** 、**信号驱动 I/O** 和 **异步 I/O** 。
+
+### Java 中 3 种常见 IO 模型
+
+#### BIO（Blockinng I/O）
+
+* **BIO 属于同步阻塞 IO 模型** 。同步阻塞 IO 模型中，应用程序发起 read 调用后，会一直阻塞，直到内核把数据拷贝到用户空间。
+* 在客户端连接数量不高的情况下，是没问题的。但是面对十万甚至百万级连接的时候，传统的 BIO 模型是无能为力的。
+
+![1760318483269](image/IO/1760318483269.png)
+
+#### NIO（Non-blocking/New I/O）
+
+* Java 中的 NIO 对应 `java.nio` 包。NIO 中的 N 可以理解为 Non-blocking，不单纯是 New。它是支持面向缓冲的，基于通道的 I/O 操作方法。 对于高负载、高并发的（网络）应用，应使用 NIO 。
+* Java 中的 NIO 可以看作是  **I/O 多路复用模型** 。也有很多人认为，Java 中的 NIO 属于同步非阻塞 IO 模型。
+* 同步非阻塞模型：
+
+  * 应用程序会一直发起 read 调用，等待数据从内核空间拷贝到用户空间的这段时间里，线程依然是阻塞的，直到在内核把数据拷贝到用户空间。
+  * 轮询：同步非阻塞 IO，发起一个 read 调用，如果数据没有准备好，这个时候应用程序可以不阻塞等待，而是切换去做一些小的计算任务，然后很快回来继续发起 read 调用。轮询不是持续不断发起的，会有间隙, 这个间隙的利用就是同步非阻塞 IO 比同步阻塞 IO 高效的地方。
+  * **缺点：**应用程序不断进行 I/O 系统调用轮询数据是否已经准备好的过程是十分消耗 CPU 资源的。****
+* ![1760318744342](image/IO/1760318744342.png)
+* I/O多路复用IO
+
+  * 多路复用模型中，线程首先发起 select 调用，询问内核数据是否准备就绪，等内核把数据准备好了，用户线程再发起 read 调用。read 调用的过程（数据从内核空间 -> 用户空间）还是阻塞的。
+  * **IO 多路复用模型，通过减少无效的系统调用，减少了对 CPU 资源的消耗。**
+  * Java 中的 NIO ，有一个**选择器 ( Selector )** 的概念，也可以被称为  **多路复用器** 。通过它，只需要一个线程便可以管理多个客户端连接。当客户端数据到了之后，才会为其服务。
+
+![1760318961829](image/IO/1760318961829.png)
+
+#### AIO(Asynchronous I/O)
+
+AIO 是异步 IO 是，基于事件和回调机制实现的，也就是应用操作之后会直接返回，不会堵塞在那里，当后台处理完成，操作系统会通知相应的线程进行后续的操作。
+
+![1760319216836](image/IO/1760319216836.png)
+
+### NIO详解
+
+* 使用 NIO 并不一定意味着高性能，它的性能优势主要体现在高并发和高延迟的网络环境下。当连接数较少、并发程度较低或者网络传输速度较快时，NIO 的性能并不一定优于传统的 BIO 。
+* 核心组件
+  * **Buffer（缓冲区）** ：NIO 读写数据都是通过缓冲区进行操作的。读操作的时候将 Channel 中的数据填充到 Buffer 中，而写操作时将 Buffer 中的数据写入到 Channel 中。
+  * **Channel（通道）** ：Channel 是一个双向的、可读可写的数据传输通道，NIO 通过 Channel 来实现数据的输入输出。通道是一个抽象的概念，它可以代表文件、套接字或者其他数据源之间的连接。
+  * **Selector（选择器）** ：允许一个线程处理多个 Channel，基于事件驱动的 I/O 多路复用模型。所有的 Channel 都可以注册到 Selector 上，由 Selector 来分配线程来处理事件。
+
+![1760320802476](image/IO/1760320802476.png)
+
+#### Buffer
+
+* 传统的 BIO 中，数据的读写是面向流的， 分为字节流和字符流。
+* NIO 库中，所有数据都是用缓冲区处理的，有点类似于 BIO 中的缓冲流。NIO 在读/写数据时，它是直接读/写到缓冲区中的。
+* 变量含义
+
+  * 容量（`capacity`）：`Buffer`可以存储的最大数据量，`Buffer`创建时设置且不可改变；
+  * 界限（`limit`）：`Buffer` 中可以读/写数据的边界。写模式下，`limit` 代表最多能写入的数据，一般等于 `capacity`（可以通过 `limit(int newLimit)`方法设置）；读模式下，`limit` 等于 Buffer 中实际写入的数据大小。
+  * 位置（`position`）：下一个可以被读写的数据的位置（索引）。从写操作模式到读操作模式切换的时候（flip），`position` 都会归零，这样就可以从头开始读写了。
+  * 标记（`mark`）：`Buffer`允许将位置直接定位到该标记处，这是一个可选属性；
+  * **0 <= mark <= position <= limit <= capacity**
+
+  ```java
+  public abstract class Buffer {
+      // Invariants: mark <= position <= limit <= capacity
+      private int mark = -1;
+      private int position = 0;
+      private int limit;
+      private int capacity;
+  }
+  ```
+* Buffer 有读模式和写模式这两种模式，分别用于从 Buffer 中读取数据或者向 Buffer 中写入数据。Buffer 被创建之后默认是写模式，调用 `flip()` 可以切换到读模式。如果要再次切换回写模式，可以调用 `clear()` 或者 `compact()` 方法。
+* ![1760321487517](image/IO/1760321487517.png)
+* ![1760321502631](image/IO/1760321502631.png)
+
+
+* 重要方法
+
+  * `get` : 读取缓冲区的数据
+  * `put` ：向缓冲区写入数据
+  * `flip` ：将缓冲区从写模式切换到读模式，它会将 `limit` 的值设置为当前 `position` 的值，将 `position` 的值设置为 0。
+  * `clear`: 清空缓冲区，将缓冲区从读模式切换到写模式，并将 `position` 的值设置为 0，将 `limit` 的值设置为 `capacity` 的值。
+  * `Buffer` 对象不能通过 `new` 调用构造方法创建对象 ，只能通过静态方法实例化 `Buffer`
+
+#### Channel
+
+* 是一个通道，全双工，建立了与数据源（如文件、网络套接字等）之间的连接。
+* 通道与流的不同之处在于通道是双向的，它可以用于读、写或者同时用于读写。
+* 常用通道：
+
+  * `FileChannel`：文件访问通道；
+  * `SocketChannel`、`ServerSocketChannel`：TCP 通信通道；
+  * `DatagramChannel`：UDP 通信通道；
+* 核心方法：
+
+  * `read` ：读取数据并写入到 Buffer 中。
+  * `write` ：将 Buffer 中的数据写入到 Channel 中。
+
+#### Selector
+
+* 允许一个线程处理多个 Channel
+* 主要运作原理：通过 Selector 注册通道的事件，Selector 会不断地轮询注册在其上的 Channel。当事件发生时，比如：某个 Channel 上面有新的 TCP 连接接入、读和写事件，这个 Channel 就处于就绪状态，会被 Selector 轮询出来。Selector 会将相关的 Channel 加入到就绪集合中。通过 SelectionKey 可以获取就绪 Channel 的集合，然后对这些就绪的 Channel 进行相应的 I/O 操作。
+* 监听事件类型：
+
+  * `SelectionKey.OP_ACCEPT`：表示通道接受连接的事件，这通常用于 `ServerSocketChannel`。
+  * `SelectionKey.OP_CONNECT`：表示通道完成连接的事件，这通常用于 `SocketChannel`。
+  * `SelectionKey.OP_READ`：表示通道准备好进行读取的事件，即有数据可读。
+  * `SelectionKey.OP_WRITE`：表示通道准备好进行写入的事件，即可以写入数据。
+* `SelectionKey` 集合：
+
+  * 所有的 `SelectionKey` 集合：代表了注册在该 Selector 上的 `Channel`，这个集合可以通过 `keys()` 方法返回。
+  * 被选择的 `SelectionKey` 集合：代表了所有可通过 `select()` 方法获取的、需要进行 `IO` 处理的 Channel，这个集合可以通过 `selectedKeys()` 返回。
+  * 被取消的 `SelectionKey` 集合：代表了所有被取消注册关系的 `Channel`，在下一次执行 `select()` 方法时，这些 `Channel` 对应的 `SelectionKey` 会被彻底删除，程序通常无须直接访问该集合，也没有暴露访问的方法。
+
+#### NIO零拷贝
+
+* 计算机执行 IO 操作时，CPU 不需要将数据从一个存储区域复制到另一个存储区域，从而可以减少上下文切换以及 CPU 的拷贝时间。
+* 零拷贝主要是减少了 CPU 拷贝及上下文的切换。
+
+如果需要使用 NIO 构建网络程序的话，不建议直接使用原生 NIO，编程复杂且功能性太弱，推荐使用一些成熟的基于 NIO 的网络编程框架比如 Netty。Netty 在 NIO 的基础上进行了一些优化和扩展比如支持多种协议、支持 SSL/TLS 等等。
