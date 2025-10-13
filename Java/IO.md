@@ -187,3 +187,7 @@ public BufferedInputStream(InputStream in, int size) {
 **适配器模式** 更侧重于让接口不兼容而不能交互的类可以一起工作，当我们调用适配器对应的方法时，适配器内部会调用适配者类或者和适配类相关的类的方法，这个过程是透明的。就比如说 `StreamDecoder` （流解码器）和 `StreamEncoder`（流编码器）就是分别基于 `InputStream` 和 `OutputStream` 来获取 `FileChannel`对象并调用对应的 `read` 方法和 `write` 方法进行字节数据的读取和写入。
 
 ### 观察者模式
+
+没看懂
+
+## IO模型
