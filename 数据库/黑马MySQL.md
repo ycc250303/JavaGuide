@@ -9,7 +9,7 @@
   * 特点：
     * 使用表存储数据，格式统一，便于维护
     * 使用SQL语言进行操作，标准统一，使用方便
-  
+
 ### SQL
 
 * SQL分类
@@ -89,7 +89,7 @@ truncate table 表名;
 
 * 数据类型
   * 数值类型表
-  
+
 | 类型        | 大小    | 有符号(SIGNED)范围                                  | 无符号(UNSIGNED)范围                                  | 描述           |
 | ----------- | ------- | --------------------------------------------------- | ----------------------------------------------------- | -------------- |
 | TINYINT     | 1 byte  | (-128, 127)                                         | (0, 255)                                              | 小整数值       |
@@ -101,7 +101,7 @@ truncate table 表名;
 | DOUBLE      | 8 bytes | (-1.7976931348623157E+308, 1.7976931348623157E+308) | 0和(2.2250738585072014E-308, 1.7976931348623157E+308) | 双精度浮点数值 |
 | DECIMAL     | -       | 依赖于M(精度)和D(标度)                              | 依赖于M(精度)和D(标度)                                | 精确定点数     |
 
-  * 字符串类型表
+* 字符串类型表
 
 | 分类       | 类型       | 大小                  | 描述                         |
 | ---------- | ---------- | --------------------- | ---------------------------- |
@@ -116,15 +116,15 @@ truncate table 表名;
 |            | LONGBLOB   | 0-4,294,967,295 bytes | 二进制形式的极大文本数据     |
 |            | LONGTEXT   | 0-4,294,967,295 bytes | 极大文本数据                 |
 
-  * 日期类型表
-  
-  | 分类     | 类型      | 大小    | 范围                                       | 格式                | 描述                     |
-  | -------- | --------- | ------- | ------------------------------------------ | ------------------- | ------------------------ |
-  | 日期类型 | DATE      | 3 bytes | 1000-01-01 至 9999-12-31                   | YYYY-MM-DD          | 日期值                   |
-  |          | TIME      | 3 bytes | -838:59:59 至 838:59:59                    | HH:MM:SS            | 时间值或持续时间         |
-  |          | YEAR      | 1 byte  | 1901 至 2155                               | YYYY                | 年份值                   |
-  |          | DATETIME  | 8 bytes | 1000-01-01 00:00:00 至 9999-12-31 23:59:59 | YYYY-MM-DD HH:MM:SS | 混合日期和时间值         |
-  |          | TIMESTAMP | 4 bytes | 1970-01-01 00:00:01 至 2038-01-19 03:14:07 | YYYY-MM-DD HH:MM:SS | 混合日期和时间值(时间戳) |
+* 日期类型表
+
+| 分类     | 类型      | 大小    | 范围                                       | 格式                | 描述                     |
+| -------- | --------- | ------- | ------------------------------------------ | ------------------- | ------------------------ |
+| 日期类型 | DATE      | 3 bytes | 1000-01-01 至 9999-12-31                   | YYYY-MM-DD          | 日期值                   |
+|          | TIME      | 3 bytes | -838:59:59 至 838:59:59                    | HH:MM:SS            | 时间值或持续时间         |
+|          | YEAR      | 1 byte  | 1901 至 2155                               | YYYY                | 年份值                   |
+|          | DATETIME  | 8 bytes | 1000-01-01 00:00:00 至 9999-12-31 23:59:59 | YYYY-MM-DD HH:MM:SS | 混合日期和时间值         |
+|          | TIMESTAMP | 4 bytes | 1970-01-01 00:00:01 至 2038-01-19 03:14:07 | YYYY-MM-DD HH:MM:SS | 混合日期和时间值(时间戳) |
 
 #### DML
 
@@ -174,7 +174,7 @@ delete from 表名 [where 条件];
 ```sql
 # dql - 基本查询结构+执行顺序
 # 4
-select            
+select          
     <字段列表>
 # 1
 from
@@ -225,8 +225,8 @@ select <字段列表> from <表名> where <条件列表>;
 
 比较运算符表
 
-| 运算符              | 功能     | 示例                          |
-| ------------------- | -------- | ----------------------------- |
+| 运算符              | 功能     | 示例                            |
+| ------------------- | -------- | ------------------------------- |
 | >                   | 大于     | `where age > 18`              |
 | >=                  | 大于等于 | `where score >= 60`           |
 | <                   | 小于     | `where price < 100`           |
@@ -240,11 +240,11 @@ select <字段列表> from <表名> where <条件列表>;
 
 逻辑运算符表
 
-| 运算符     | 功能 | 示例                                     |
-| ---------- | ---- | ---------------------------------------- |
-| AND 或 &&  | 并且 | `where age > 18 and status = 1`          |
-| OR 或 \|\| | 或者 | `where role = 'admin' or role = 'super'` |
-| NOT 或 !   | 非   | `where not is_deleted`                   |
+| 运算符    | 功能 | 示例                                       |
+| --------- | ---- | ------------------------------------------ |
+| AND 或 && | 并且 | `where age > 18 and status = 1`          |
+| OR 或\|\| | 或者 | `where role = 'admin' or role = 'super'` |
+| NOT 或 !  | 非   | `where not is_deleted`                   |
 
 优先级：NOT>AND>OR
 
@@ -276,6 +276,7 @@ group by <分组字段名>
 ```
 
 * where与having区别
+
   * 执行时机不同:
     * where在分组之前过滤,不满足条件不参与分组
     * having在分组之后过滤,对分组结果进行筛选
@@ -284,7 +285,6 @@ group by <分组字段名>
     * having可以使用聚合函数
 * 执行顺序：where>聚合函数>having
 * 分组之后，查询的字段一般为聚合函数和分组字段，查询其他字段无意义
-
 * 排序查询
 
 ```sql
@@ -568,8 +568,7 @@ from 表A
 ##### 标量子查询
 
 * 子查询返回的结果是单个值（数字，字符串，日期等）
-* 常用操作符：比较运算符 `= <> > >= < <=
-`
+* 常用操作符：比较运算符 `= <> > >= < <= `
 
 ##### 列子查询
 
@@ -588,8 +587,8 @@ from 表A
 
 * 子查询返回的结果是一行（可以多列）
 * 常用操作符：`in not in,any,some,all`
-* 可以使用括号`()`将不同属性组合后使用`=`运算
-  
+* 可以使用括号 `()`将不同属性组合后使用 `=`运算
+
 ##### 表子查询
 
 * 子查询返回的结果是多行多列
@@ -637,10 +636,10 @@ rollback;
 
 | 隔离级别                              | 脏读 | 不可重复读 | 幻读 |
 | ------------------------------------- | ---- | ---------- | ---- |
-| Read uncommited：读未提交             | √    | √          | √    |
-| Read uncommited：读已提交(Oracle默认) | ×    | √          | √    |
-| Repeatable Read：可重复读(MySQL默认)  | ×    | ×          | ×    |
-| Serializable：串行化                  | ×    | ×          | ×    |
+| Read uncommited：读未提交             | √   | √         | √   |
+| Read uncommited：读已提交(Oracle默认) | ×   | √         | √   |
+| Repeatable Read：可重复读(MySQL默认)  | ×   | ×         | ×   |
+| Serializable：串行化                  | ×   | ×         | ×   |
 
 * 从上到下数据安全性越来越高，但是性能越来越低
 
@@ -659,11 +658,12 @@ set [session|global] transaction isolation level 隔离级别;
 #### 结构
 
 * 为什么 InnoDB 存储引擎选择使用 B+Tree 索引结构？
+
   * 相对于二叉树，层级更少，搜索效率高
   * 对于 B-Tree，无论是叶子节点还是非叶子节点，都会保存数据，这样导致一页中存储的键值减少，指针也跟着减少，要同样保存大量数据，只能增加树的高度，导致性能降低
   * 相对于 Hash 索引，B+Tree 支持范围匹配及排序操作
-
 * 复杂度
+
   * 插入（I/O操作）：$O(\log_{n/2}(N))$，n为节点中指针的最大数量，N是被索引文件中的记录数量
 
 #### 语法
@@ -690,7 +690,7 @@ show global status lick 'Com_______';
 ```
 
 * 几个重要的指标
-  
+
 | Variable_name | Value            |
 | ------------- | ---------------- |
 | Com_delete    | 删除语句执行次数 |
@@ -706,7 +706,7 @@ show global status lick 'Com_______';
 show variables like '%slow_query_log%';
 ```
 
-* 若未开启，需要在MySQL的配置文件中`/etc/my.cnf`添加以下配置
+* 若未开启，需要在MySQL的配置文件中 `/etc/my.cnf`添加以下配置
 
 ```sql
 # 开启慢查询日志
@@ -716,9 +716,9 @@ slow_query_log = 1
 long_query_time = 1
 ```
 
-* 慢查询文件存放位置`/var/lib/mysql/localhost-slow.log`
+* 慢查询文件存放位置 `/var/lib/mysql/localhost-slow.log`
 * `tail -f localhost-slow.log`实时查看慢查询日志
-  
+
 ##### profile详情分析
 
 * 检查profile是否开启
@@ -747,7 +747,7 @@ show profiles;
 | 2        | 0.000123 | select * from table_name |
 
 * 查看特定查询耗时情况
-  
+
 ```sql
 show profile for query query_id;
 ```
@@ -762,20 +762,20 @@ explain select * from table_name where condition;
 
 * 执行计划
 
-| 名称              | 含义                                                                                                                                                             |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| id                | select查询的序列号，表示查询中执行select子句或者是操作表的顺序(id相同，执行顺序从上往下；id不同，id值越大，优先级越高)                                           |
-| select_type       | select的类型<br>SIMPLE：不使用表连接或者子查询<br>PRIMARY：主查询<br>UNION：UNION中的第二个或者后面的查询语句<br>SUBQUERY：SELECT/WHERE之后包含了子查询          |
-| **table**         | 进行查询的表                                                                                                                                                     |
-| partitions        |                                                                                                                                                                  |
-| type              | 表示连接类型，性能从高到低依次为：NULL(不查询任何表),system(系统表),cons(主键/唯一索引),eq_ref,ref(非唯一索引),range,index(用到索引但是遍历索引),all(全表扫描)   |
-| **possible_keys** | 可能应用在这张表的索引                                                                                                                                           |
-| **key**           | 实际使用的索引(没用则为NULL)                                                                                                                                     |
-| **key_len**       | 索引中使用的字节数，该值为索引字段最大可能长度而非实际长度                                                                                                       |
-| ref               |                                                                                                                                                                  |
-| **rows**          | MySQL认为必须要执行查询的行数，预估值                                                                                                                            |
-| filtered          | 返回结果行数占需读取行数的百分比                                                                                                                                 |
-| **Extra**         | 执行情况的描述和说明<br>using index condition:查找使用了索引，但是需要回表查询<br>using where;using index:查找使用了索引，需要的数据在索引列都能找到，不需要回表 |
+| 名称                    | 含义                                                                                                                                                                     |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| id                      | select查询的序列号，表示查询中执行select子句或者是操作表的顺序(id相同，执行顺序从上往下；id不同，id值越大，优先级越高)                                                   |
+| select_type             | select的类型`<br>`SIMPLE：不使用表连接或者子查询`<br>`PRIMARY：主查询`<br>`UNION：UNION中的第二个或者后面的查询语句`<br>`SUBQUERY：SELECT/WHERE之后包含了子查询  |
+| **table**         | 进行查询的表                                                                                                                                                             |
+| partitions              |                                                                                                                                                                          |
+| type                    | 表示连接类型，性能从高到低依次为：NULL(不查询任何表),system(系统表),cons(主键/唯一索引),eq_ref,ref(非唯一索引),range,index(用到索引但是遍历索引),all(全表扫描)           |
+| **possible_keys** | 可能应用在这张表的索引                                                                                                                                                   |
+| **key**           | 实际使用的索引(没用则为NULL)                                                                                                                                             |
+| **key_len**       | 索引中使用的字节数，该值为索引字段最大可能长度而非实际长度                                                                                                               |
+| ref                     |                                                                                                                                                                          |
+| **rows**          | MySQL认为必须要执行查询的行数，预估值                                                                                                                                    |
+| filtered                | 返回结果行数占需读取行数的百分比                                                                                                                                         |
+| **Extra**         | 执行情况的描述和说明`<br>`using index condition:查找使用了索引，但是需要回表查询`<br>`using where;using index:查找使用了索引，需要的数据在索引列都能找到，不需要回表 |
 
 #### 使用规则
 
@@ -852,12 +852,12 @@ select count(distinct substring(column_name,left,right))/count(*) from table_nam
 #### 插入数据
 
 * insert语句优化
+
   * 批量插入(500-1000条)
   * 手动提交事务
   * 主键顺序插入
-
 * 大批量数据插入——load
-  
+
 ```sql
 # 客户端连接服务器时加上参数
 mysql --loacal-infile -u root -p
@@ -868,7 +868,7 @@ select @@local_infile
 # 执行load指令
 load data local infile 'root/sql1.log' into table 'tb_user' fields terminated by ',' lines terminated by '\n'
 ```
-  
+
 #### 主键优化
 
 #### order by优化
@@ -922,7 +922,7 @@ drop view [if exists] <视图名称>;
 
 #### 检查选项 cascaded/loacl
 
-* 在创建视图的语句后加上`with cascaded/local check option`
+* 在创建视图的语句后加上 `with cascaded/local check option`
 * `cascaded`：检查视图及其递归依赖的视图
 * `local`：检查视图及其递归依赖的视图，**若其递归依赖的视图没有检查选项则不检查**
 
@@ -970,7 +970,7 @@ drop procedure [if exists]过程名;
 ##### 系统变量
 
 * MySQL服务器提供，不是用户定义，属于服务器层面
-* MySQL服务器重启后，所设置的全局参数会失效，想要不失效，需要在`/etc/my.cnf`中配置
+* MySQL服务器重启后，所设置的全局参数会失效，想要不失效，需要在 `/etc/my.cnf`中配置
 
 ```sql
 # 系统变量操作
@@ -1154,7 +1154,7 @@ declare handler_action handler
  * 
  * 3. statement - 触发处理程序时执行的SQL语句
  */
- ```
+```
 
 ```sql
 delimiter //
@@ -1166,19 +1166,19 @@ begin
     declare emp_name varchar(50);
     declare emp_salary decimal(10,2);
     declare done int default 0;
-    
+  
     -- 声明游标
     declare emp_cursor cursor for
         select employee_id, full_name, salary
         from employees
         where department = 'Sales';
-    
+  
     -- 声明未找到记录的处理程序
     declare continue handler for not found set done = 1;
-    
+  
     -- 打开游标
     open emp_cursor;
-    
+  
     -- 创建临时结果表
     create temporary table salary_report (
         employee_id int primary key,
@@ -1186,33 +1186,33 @@ begin
         old_salary decimal(10,2),
         new_salary decimal(10,2)
     );
-    
+  
     -- 循环处理每条记录
     process_loop: loop
         -- 获取记录
         fetch emp_cursor into emp_id, emp_name, emp_salary;
-        
+      
         -- 检查是否结束
         if done = 1 then
             leave process_loop;
         end if;
-        
+      
         -- 业务逻辑：涨薪10%
         set @new_salary = emp_salary * 1.1;
-        
+      
         -- 更新员工工资
         update employees
         set salary = @new_salary
         where employee_id = emp_id;
-        
+      
         -- 记录变更
         insert into salary_report values
         (emp_id, emp_name, emp_salary, @new_salary);
     end loop;
-    
+  
     -- 关闭游标
     close emp_cursor;
-    
+  
     -- 返回结果
     select * from salary_report;
 end //
