@@ -311,6 +311,142 @@ public class StaticFactoryDemo {
 
 ![1760098839041](image/JavaGuide+菜鸟/1760098839041.png)
 
+## 单例模式
+
+* ⼀个单例类在任何情况下都只存在⼀个实例，构造⽅法必须是私有的、
+  由⾃⼰创建⼀个静态变量存储实例，对外提供⼀个静态公有⽅法获取实例。
+* 主要成员：
+  * 单例类：包含单例实例的类，通常将构造函数声明为私有。
+  * 静态成员变量：用于存储单例实例的静态成员变量。
+  * 获取实例方法：静态方法，用于获取单例实例。
+  * 私有构造函数：防止外部直接实例化单例类。
+  * 线程安全处理：确保在多线程环境下单例实例的创建是安全的。
+* 优点：
+  * 节省资源
+  * 全局控制
+* 缺点
+  * 扩展性差
+  * 有点违背单一职责原则
+  * 测试困难
+
+### 饿汉式（线程安全）
+
+* 优点：类⼀加载就创建对象，天生线程安全，效率高。
+* 缺点：不是懒加载。如果这个实例从未使⽤过，会造成内存浪费。
+* 懒加载 （lazy loading）：使⽤的时候再创建对象
+
+```java
+public class Singleton {  
+    private static Singleton instance = new Singleton();  
+    private Singleton (){}  
+    public static Singleton getInstance() {  
+    return instance;  
+    }  
+}
+```
+
+### 懒汉式（线程不安全）
+
+第⼀次被使⽤时才创建实例，但是基础写法式不安全的，会被多线程破坏
+
+* 优点：实现了懒加载。
+* 缺点：线程不安全。在多线程环境下，可能创建出多个实例。
+
+  ```java
+  public class Singleton {  
+      private static Singleton instance;  
+      private Singleton (){}  
+
+      public static Singleton getInstance() {  
+          if (instance == null) {  
+              instance = new Singleton();  
+          }  
+          return instance;  
+      }  
+  }
+  ```
+
+### 懒汉式（同步，线程安全）
+
+* 优点：第一次调用才初始化，避免内存浪费。
+* 缺点：必须加锁 synchronized 才能保证单例，但加锁会影响效率。
+
+```java
+public class Singleton {  
+    private static Singleton instance;  
+    private Singleton (){}  
+    public static synchronized Singleton getInstance() {  
+        if (instance == null) {  
+            instance = new Singleton();  
+        }  
+        return instance;  
+    }  
+}
+```
+
+### 懒汉式（双重检查锁）
+
+采用双锁机制，安全且在多线程情况下能保持高性能。`getInstance() `的性能对应用程序很关键。
+
+* 优点：懒加载、线程安全、性能较⾼。
+* 缺点：实现相对复杂，需要正确理解 volatile 的作⽤
+
+```java
+public class Singleton {  
+    private volatile static Singleton singleton;  
+    private Singleton (){}  
+    public static Singleton getSingleton() {  
+    if (singleton == null) {  
+        synchronized (Singleton.class) {  
+            if (singleton == null) {  
+                singleton = new Singleton();  
+            }  
+        }  
+    }  
+    return singleton;  
+    }  
+}
+```
+
+* 双重检查的必要性：
+  * 外层检查：当实例已创建时，所有线程可直接返回结果，避免不必要的同步开销，是性能优化的关键。
+  * 内层检查：解决并发竞争问题 —— 当多个线程同时通过外层检查时，同步块保证有⼀个线程进⼊创建逻辑，后续线程会被内层检查拦截，确保仅创建⼀个实例
+* volatile 关键字的作⽤：instance 采⽤volatile 关键字修饰也是很有必要的，`instance = new Singleton();`为三步执⾏：
+  * 为instance 分配内存空间
+  * 初始化instance
+  * 将instance 指向分配的内存地址
+* 由于 JVM 具有指令重排的特性，执⾏顺序有可能变成 1->3->2。指令重排在单线程环境下不会出现问题，但是在多线程环境下会导致⼀个线程获得还没有初始化的实例。例如，线程 T1 执⾏了1 和 3，此时 T2 调⽤getInstance () 后发现instance 不为空，因此返回instance ，但此时instance 还未被初始化。在并发场景下可能导致不可预期的行为（难以重现的 Bug）
+
+### 静态内部类
+
+```java
+public class Singleton {  
+    private static class SingletonHolder {  
+    private static final Singleton INSTANCE = new Singleton();  
+    }  
+    private Singleton (){}  
+    public static final Singleton getInstance() {  
+        return SingletonHolder.INSTANCE;  
+    }  
+}
+```
+
+### 枚举单例
+
+* 优点：
+  * 实现极其简单。
+  * 天⽣线程安全，由 JVM 从语⾔层⾯保证。
+  * 能有效防⽌通过反射和反序列化来破坏单例。Java 规定，不能通过反射来创建枚举实例，并且在反序列化时，JVM 会特殊处理，保证返回的是同⼀个枚举实例。
+* 缺点：不是懒加载。
+
+```java
+public enum Singleton {  
+    INSTANCE;  
+    public void whateverMethod() {  
+    }  
+}
+```
+
 ## 适配器模式
 
 ### 介绍
