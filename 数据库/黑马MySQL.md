@@ -670,7 +670,7 @@ set [session|global] transaction isolation level 隔离级别;
 
 ```sql
 # 创建索引
-create index [unique|fulltext] index index_name on table_name(column_name1, column_name2, ...);
+create [unique|fulltext] index index_name on table_name(column_name1, column_name2, ...);
 # unique: 唯一索引
 # fulltext: 全文索引
 
