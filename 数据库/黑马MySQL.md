@@ -174,7 +174,7 @@ delete from 表名 [where 条件];
 ```sql
 # dql - 基本查询结构+执行顺序
 # 4
-select        
+select    
     <字段列表>
 # 1
 from
@@ -866,20 +866,50 @@ set global local_infile = 1;
 # 检查开关
 select @@local_infile
 # 执行load指令
+# 字段用逗号分隔，每行用'\n'分隔
 load data local infile 'root/sql1.log' into table 'tb_user' fields terminated by ',' lines terminated by '\n'
 ```
 
 #### 主键优化
 
+* InnoDB引擎中，表数据是根据主键顺序存放的（索引组织表）
+* 页分裂、页合并
+* 设计原则
+  * 尽量降低主键长度
+  * 插入数据时顺序插入、使用自增逐渐
+  * 尽量避免对主键的修改
+
 #### order by优化
+
+| 排序           | 说明                                                |
+| -------------- | --------------------------------------------------- |
+| using filesort | 表索引/全表扫描，读取满足条件的数据，在缓冲区中排序 |
+| using index    | 有序索引直接返回有序数据，效率高                    |
+
+* 根据排序字段建立索引，遵循最左前缀法则
+* 尽量使用覆盖索引
+* 多字段+同时存在升降序，在创建索引时要说明
+* 不可避免需要filesort时，可以增大排序缓冲区大小
 
 #### group by优化
 
+* 分组也可用索引，遵循最左前缀法则
+
 #### limit优化
+
+* 大数据情况下效率很低
+* 创建覆盖索引、使用子查询优化
 
 #### count优化
 
+* MyISAM：将表的总行数记录在了磁盘上，会直接返回数据
+* InnoDB：需要一行一行读取数据并累计计数（根据约束判断是否为null）
+* 效率：count(字段)<count(主键id)<count(1)≈count(*)
+
 #### update优化
+
+* update语句加的是行锁
+* 根据索引字段更新，否则行锁会编程表锁
 
 ### 视图
 
@@ -1191,20 +1221,20 @@ begin
     process_loop: loop
         -- 获取记录
         fetch emp_cursor into emp_id, emp_name, emp_salary;
-    
+  
         -- 检查是否结束
         if done = 1 then
             leave process_loop;
         end if;
-    
+  
         -- 业务逻辑：涨薪10%
         set @new_salary = emp_salary * 1.1;
-    
+  
         -- 更新员工工资
         update employees
         set salary = @new_salary
         where employee_id = emp_id;
-    
+  
         -- 记录变更
         insert into salary_report values
         (emp_id, emp_name, emp_salary, @new_salary);

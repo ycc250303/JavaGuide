@@ -47,3 +47,4 @@
 
 * [X] MySQL存储时间
 * [X] MySQL事务
+* [ ] 集合复习（List）
