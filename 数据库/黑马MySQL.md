@@ -174,7 +174,7 @@ delete from 表名 [where 条件];
 ```sql
 # dql - 基本查询结构+执行顺序
 # 4
-select    
+select  
     <字段列表>
 # 1
 from
@@ -634,12 +634,12 @@ rollback;
 
 #### 事务隔离级别
 
-| 隔离级别                              | 脏读 | 不可重复读 | 幻读                      |
-| ------------------------------------- | ---- | ---------- | ------------------------- |
-| Read uncommited：读未提交             | √   | √         | √                        |
-| Read uncommited：读已提交(Oracle默认) | ×   | √         | √                        |
-| Repeatable Read：可重复读(MySQL默认)  | ×   | ×         | √ (标准) / ≈× (InnoDB) |
-| Serializable：串行化                  | ×   | ×         | ×                        |
+| 隔离级别                             | 脏读 | 不可重复读 | 幻读                      |
+| ------------------------------------ | ---- | ---------- | ------------------------- |
+| Read uncommited：读未提交            | √   | √         | √                        |
+| Read commited：读已提交(Oracle默认)  | ×   | √         | √                        |
+| Repeatable Read：可重复读(MySQL默认) | ×   | ×         | √ (标准) / ≈× (InnoDB) |
+| Serializable：串行化                 | ×   | ×         | ×                        |
 
 * 从上到下数据安全性越来越高，但是性能越来越低
 
@@ -1277,3 +1277,99 @@ show create trigger trigger_name;
 # 触发器删除语法
 drop trigger [if exists] [database_name.]trigger_name;
 ```
+
+### 锁
+
+* 计算机协调多个进程或线程并发访问某一资源的机制
+* 分类
+  * 全局锁：锁数据库所有表
+  * 表级锁：锁整张表
+  * 行级锁：锁对应行数据
+
+#### 全局锁
+
+* 加锁后整个实例都是只读状态，DML写、DDL语句，更新操作数据都成阻塞状态
+* 使用场景：数据库备份，保证数据的完整性
+* 弊端
+  * 主库备份，不能执行更新，业务基本停摆
+  * 从库备份，备份时不能执行主库同步的二进制日志binlog，导致主从延迟
+  * InnoDB引擎，备份时加上操作 `--single-transaction`完成不加锁的备份
+
+```sql
+# 加锁
+flush tables with read lock
+
+# 备份（在电脑系统执行，不是mysql语句）
+mysqldump -用户名 -密码 数据库 > 数据库sql文件
+
+
+# 解锁
+unlock tables
+```
+
+#### 表级锁
+
+* 锁的粒度大，发生锁冲突概率最高，并发度最低
+* 分类
+  * 表锁
+  * 元数据锁
+  * 意向锁
+
+##### 表锁
+
+* 表共享读锁（read lock）：所有表都可读，但是都不可写
+* 表独占写锁（write lock）：加锁的客户端可读可写，其他均不能读写
+
+```sql
+#加锁
+lock tables 表名 read/write；
+
+#解锁
+unlock tables;
+```
+
+##### 元数据锁（meta data lock，MDL）
+
+* 系统自动控制，无需显式使用
+* 访问表的时候会自动加上，主要作用是维护表元数据的数据一致性，表上有活动事务的时候，不能对元数据进行写入操作
+* **避免DML与DDL冲突，保证读写正确性**
+* 对表进行增删改查的时候，加MDL读锁（共享）；对表结构进行变更操作的时候，加MDL写锁（排他）
+* 查看元数据锁：`select object_type,object_schema,object_name,lock_duration from performance_schema.metadata_locks;`
+
+![1761278739853](image/黑马MySQL/1761278739853.png)
+
+##### 意向锁
+
+* 避免DML在执行时，加的行锁和表锁的冲突，这样表锁就不用检查每行数据是否加锁，减少检查次数
+* 意向共享锁（IS）：`select ... lock in share mode`添加，与表锁共享锁兼容，与表锁排他锁互斥
+* 意向排他锁（IX）：`insert、update、delete、select ... for update`添加，与表锁共享锁和表锁排他锁都互斥。意向锁之间不互斥
+* 查看意向锁：`select object_schema,object_name,index_name,lock_type,lock_mode,lock_data from performance_schema.data_locks;`
+
+#### 行级锁
+
+* 每次加锁锁住对应的行数据。锁粒度最小，并发量最高，发生冲突概率最低
+
+##### 行锁
+
+* 锁定单个记录，防止其他事务进行update和delete，RC（Read commited）、RR（Repeatable Read支持）
+* 共享锁（S）：允许事务读一行，阻止其他事务获取排他锁
+* 排他锁（X）：允许获取排他锁的事务更新数据，阻止其他事务获取相同的共享锁和排他锁
+* InnoDB引擎的行锁是针对索引加的锁，不通过索引检索数据，**行锁会升级为表锁**
+
+![1761296444287](image/黑马MySQL/1761296444287.png)
+
+* 自动加锁
+
+![1761296482879](image/黑马MySQL/1761296482879.png)
+
+##### 间隙锁
+
+* 锁住索引记录间隙（不含该记录），防止其他事务在间隙中insert，产生幻读，RR支持
+* InnoDB引擎使用next-key锁进行搜索和索引扫描
+* 索引上等值查询（唯一索引），给不存在的记录加锁时，优化为间隙锁
+* 索引上等值查询（普通索引），向右遍历最后一个值不满足查询需求时，临建锁退化为间隙锁
+* 索引的范围查询，会访问到第一个不满足条件的值
+
+##### 临建锁
+
+* 行锁和间隙锁组合，锁住数据，锁住数据前面的间隙，RR支持
