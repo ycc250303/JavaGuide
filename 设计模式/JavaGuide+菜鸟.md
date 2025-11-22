@@ -419,6 +419,9 @@ public class Singleton {
 
 ### 静态内部类
 
+* JVM在加载外部类时，不会加载内部类。只有内部类属性/方法被调用才会被加载
+* 保证只被实例化一次、并且严格保证实例化顺序
+
 ```java
 public class Singleton {  
     private static class SingletonHolder {  
