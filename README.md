@@ -1,8 +1,6 @@
-# JavaGuide
+# ycc250303_CS_Note
 
-以JavaGuide为主的笔记+八股
-
-链接原文：[JavaGuide原文](https://javaguide.cn/)
+各种计算机基础知识+Java笔记
 
 ## 项目组成
 
@@ -16,115 +14,10 @@
 
 [Linux系统](https://github.com/ycc250303/JavaGuide/tree/main/Linux)
 
-## 更新日志
+[计算机网络](https://github.com/ycc250303/JavaGuide/tree/main/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C)
 
-仅包含2025年10月12号之后的更新日志
+[操作系统](https://github.com/ycc250303/JavaGuide/tree/main/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F)
 
-* 2025年10月12日
+[软件测试](https://github.com/ycc250303/JavaGuide/tree/main/%E8%BD%AF%E4%BB%B6%E6%B5%8B%E8%AF%95)
 
-* [X] 启动更新日志
-* [X] Java I/O基础，设计模式
-* [X] 数据库基础知识
-
-* 2025年10月13日
-
-* [X] SQL基础
-* [X] Java IO模型，NIO详解
-* [X] SQL基础题（牛客）
-* [X] 单例模式
-
-* 2025年10月14日
-
-* [X] MySQL面试题（1/3）
-* [X] SQL进阶题（1/5）
-
-* 2025年10月15日
-
-* [X] MySQL索引
-* [ ] SQL进阶题（2/5）
-
-* 2025年10月16日
-
-* [X] MySQL存储时间
-* [X] MySQL事务
-* [X] 集合复习（List）
-
-* 2025年10月17日
-
-* [X] 向量数据库
-* [ ] MySQL锁
-* [ ] Java集合
-
-* 2025年10月18日
-
-* [X] 软件测试基础
-
-* 2025年10月20日
-
-* [X] Java基础复习
-
-* 2025年10月21日
-
-* [X] Java面向对象复习
-
-* 2025年10月23日
-
-* [X] Java面向对象复习
-* [X] 设计模式复习
-
-* 2025年10月24日
-
-* [X] MySQL锁
-* [X] Java异常
-
-* 2025年10月25日
-
-* [X] MySQL引擎
-* [X] Java集合复习
-
-* 2025年10月27日
-
-* [X] Java集合复习
-
-* 2025年10月29日
-
-* [X] Java集合复习
-
-* 2025年11月11日
-
-* [X] langchain4j
-
-* 2025年11月12日
-
-* [X] Java多线程
-
-* 2025年11月13日
-
-* [X] 设计模式复习
-* [X] Java多线程
-
-* 2025年11月15日
-
-* [X] 计算机网络基础
-
-* 2025年11月16日
-
-* [X] redis最最基础
-* [ ] Java多线程
-
-* 2025年11月17日
-
-* [X] 计网HTTP基础
-
-* 2025年11月18日
-
-* [X] 计网HTTP
-
-* 2025年11月19日
-
-* [X] 计网HTTP加密
-
-* 2025年11月20日
-
-* [X] JVM基础
-* [ ] 设计模式
+[框架](https://github.com/ycc250303/JavaGuide/tree/main/%E6%A1%86%E6%9E%B6)
