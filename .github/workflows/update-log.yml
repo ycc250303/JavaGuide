@@ -1,0 +1,150 @@
+name: 自动更新日志
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch: # 允许手动触发
+
+jobs:
+  update-log:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write # 需要写入权限来提交更改
+    
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 获取完整历史记录
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: 配置 Git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+      
+      - name: 生成更新日志
+        id: generate-log
+        run: |
+          # 设置起始日期（2026-01-10）
+          START_DATE="2026-01-10"
+          
+          # 如果 update_log.md 不存在，创建它
+          if [ ! -f "update_log.md" ]; then
+            echo "# 更新日志" > update_log.md
+            echo "" >> update_log.md
+            echo "> 自动生成，记录 $START_DATE 之后的更新" >> update_log.md
+            echo "" >> update_log.md
+          fi
+          
+          # 读取现有的更新日志内容
+          EXISTING_CONTENT=$(cat update_log.md 2>/dev/null || echo "")
+          
+          # 提取已记录的提交哈希（避免重复）
+          # 格式：`hash` 或 [hash]，提取7位短哈希
+          RECORDED_HASHES=$(echo "$EXISTING_CONTENT" | grep -oE '`[a-f0-9]{7}`|\[[a-f0-9]{7}\]' | sed 's/[`\[\]]//g' || echo "")
+          
+          # 获取从起始日期到现在的所有提交
+          ALL_COMMITS=$(git log --since="$START_DATE" --pretty=format:"%H|%ad|%an|%s" --date=format:"%Y-%m-%d %H:%M:%S" --reverse)
+          
+          # 检查是否有新提交
+          if [ -z "$ALL_COMMITS" ]; then
+            echo "没有找到 $START_DATE 之后的提交"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # 过滤出未记录的提交
+          NEW_COMMITS=""
+          while IFS='|' read -r hash date author message; do
+            # 获取短哈希（7位）
+            SHORT_HASH=$(echo "$hash" | cut -c1-7)
+            # 检查这个短哈希是否已记录
+            if ! echo "$RECORDED_HASHES" | grep -q "^$SHORT_HASH$"; then
+              if [ -z "$NEW_COMMITS" ]; then
+                NEW_COMMITS="$hash|$date|$author|$message"
+              else
+                NEW_COMMITS="$NEW_COMMITS"$'\n'"$hash|$date|$author|$message"
+              fi
+            fi
+          done <<< "$ALL_COMMITS"
+          
+          # 如果没有新提交，退出
+          if [ -z "$NEW_COMMITS" ]; then
+            echo "所有提交已记录，无需更新"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # 创建临时文件存储新日志条目
+          TEMP_NEW=$(mktemp)
+          TEMP_COMMITS=$(mktemp)
+          echo "$NEW_COMMITS" > "$TEMP_COMMITS"
+          
+          # 按日期分组新提交（使用进程替换避免子shell问题）
+          CURRENT_DATE=""
+          while IFS='|' read -r hash date author message <&3; do
+            COMMIT_DATE=$(echo "$date" | cut -d' ' -f1)
+            SHORT_HASH=$(echo "$hash" | cut -c1-7)
+            TIME=$(echo "$date" | cut -d' ' -f2)
+            
+            # 如果是新的日期，添加日期标题
+            if [ "$COMMIT_DATE" != "$CURRENT_DATE" ]; then
+              if [ -n "$CURRENT_DATE" ]; then
+                echo "" >> "$TEMP_NEW"
+              fi
+              echo "## $COMMIT_DATE" >> "$TEMP_NEW"
+              echo "" >> "$TEMP_NEW"
+              CURRENT_DATE="$COMMIT_DATE"
+            fi
+            
+            # 添加提交记录
+            echo "- **$TIME** - \`$SHORT_HASH\` $message _(by $author)_" >> "$TEMP_NEW"
+          done 3< "$TEMP_COMMITS"
+          
+          # 读取新生成的日志条目
+          NEW_ENTRIES=$(cat "$TEMP_NEW" 2>/dev/null || echo "")
+          rm "$TEMP_NEW" "$TEMP_COMMITS"
+          
+          # 构建新的更新日志
+          # 保留文件头（如果有）
+          if echo "$EXISTING_CONTENT" | grep -q "^# 更新日志"; then
+            HEADER=$(echo "$EXISTING_CONTENT" | sed -n '1,/^## /p' | sed '$d')
+            BODY=$(echo "$EXISTING_CONTENT" | sed -n '/^## /,$p')
+          else
+            HEADER="# 更新日志"$'\n'""$'\n'"> 自动生成，记录 $START_DATE 之后的更新"$'\n'""
+            BODY=""
+          fi
+          
+          # 合并：新条目 + 现有内容
+          {
+            echo "$HEADER"
+            echo ""
+            if [ -n "$NEW_ENTRIES" ]; then
+              echo "$NEW_ENTRIES"
+              echo ""
+            fi
+            if [ -n "$BODY" ]; then
+              echo "$BODY"
+            fi
+          } > update_log.md
+          
+          # 检查是否有实际更改
+          if git diff --quiet update_log.md; then
+            echo "更新日志没有变化"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "更新日志已生成，添加了新的提交记录"
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: 提交并推送更新
+        if: steps.generate-log.outputs.has_changes == 'true'
+        run: |
+          git add update_log.md
+          git commit -m "chore: 自动更新日志 [skip ci]" || exit 0
+          git push || exit 0
+
