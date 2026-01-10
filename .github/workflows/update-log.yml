@@ -29,8 +29,8 @@ jobs:
       - name: 生成更新日志
         id: generate-log
         run: |
-          # 设置起始日期（2026-01-10）
-          START_DATE="2026-01-10"
+          # 设置起始日期（2026-01-09）
+          START_DATE="2026-01-09"
           
           # 如果 update_log.md 不存在，创建它
           if [ ! -f "update_log.md" ]; then
