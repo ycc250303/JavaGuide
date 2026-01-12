@@ -101,8 +101,8 @@ jobs:
               CURRENT_DATE="$COMMIT_DATE"
             fi
             
-            # 添加提交记录（只保留时间和提交信息）
-            echo "- $TIME - $message" >> "$TEMP_NEW"
+            # 添加提交记录（包含时间、提交信息和短哈希，短哈希用于后续去重）
+            echo "- $TIME - $message [\`$SHORT_HASH\`]" >> "$TEMP_NEW"
           done 3< "$TEMP_COMMITS"
           
           # 读取新生成的日志条目
