@@ -5,6 +5,93 @@ Java IO 流的 40 多个类都是从如下 4 个抽象类基类中派生出来�
 * `InputStream`/`Reader`: 所有的输入流的基类，前者是字节输入流，后者是字符输入流。
 * `OutputStream`/`Writer`: 所有输出流的基类，前者是字节输出流，后者是字符输出流。
 
+![1761782305814](image/IO/1761782305814.png)
+
+## 核心抽象类
+
+### InputStream 类
+
+* `int read()`：读取数据
+* `int read(byte b[], int off, int len)`：从第 off 位置开始读，读取 len 长度的字节，然后放入数组 b 中
+* `long skip(long n)`：跳过指定个数的字节
+* `int available()`：返回可读的字节数
+* `void close()`：关闭流，释放资源
+
+### OutputStream 类
+
+* `void write(int b)`： 写入一个字节，虽然参数是一个 int 类型，但只有低 8 位才会写入，高 24 位会舍弃
+* `void write(byte b[], int off, int len)`： 将数组 b 中的从 off 位置开始，长度为 len 的字节写入
+* `void flush()`： 强制刷新，将缓冲区的数据写入
+* `void close()`：关闭流
+
+### Reader 类
+
+* `int read()`：读取单个字符
+* `int read(char cbuf[], int off, int len)`：从第 off 位置开始读，读取 len 长度的字符，然后放入数组 b 中
+* `long skip(long n)`：跳过指定个数的字符
+* `int ready()`：是否可以读了
+* `void close()`：关闭流，释放资源
+
+### Writer 类
+
+* `void write(int c)`： 写入一个字符
+* `void write( char cbuf[], int off, int len)`： 将数组 cbuf 中的从 off 位置开始，长度为 len 的字符写入
+* `void flush()`： 强制刷新，将缓冲区的数据写入
+* `void close()`：关闭流
+
+![1761782263886](image/IO/1761782263886.png)
+
+## 控制台读取输入
+
+* 把 `System.in`包装在一个 `BufferedReader`中创建一个字符流
+* ```java
+  // 使用 BufferedReader 在控制台读取字符/字符串
+
+  import java.io.*;
+
+  public class BRRead {
+     public static void main(String args[]) throws IOException
+     {
+        char c;
+        String str;
+        // 使用 System.in 创建 BufferedReader 
+        BufferedReader br = new BufferedReader(new 
+                           InputStreamReader(System.in));
+        // 读取字符/字符串
+        do {
+           c = (char) br.read();// 字符
+  	 str = br.readLine(); // 字符串
+           System.out.println(c);
+        } while(c != 'q');
+     }
+  }
+
+  ```
+* 使用 `Sacnner`类
+* ```java
+  import java.util.Scanner; 
+
+  public class ScannerDemo { 
+      public static void main(String[] args) { 
+          Scanner scan = new Scanner(System.in); 
+  				// 从键盘接收数据
+
+          //nextLine方式接收字符串
+          System.out.println("nextLine方式接收：");
+          // 判断是否还有输入
+          if(scan.hasNextLine()){   
+            String str2 = scan.nextLine();
+            System.out.println("输入的数据为："+str2);  
+      	}  
+      } 
+  } 
+
+  ```
+* next需要读取有效字符才会结束输入，有效字符前面的空白会去掉，以空白作为分隔符/结束符，无法得到有空格的字符串
+* nextline以enter为结束符
+
+## 读写文件
+
 ## 字节流
 
 ### InputStream（字节输入流）
@@ -13,7 +100,7 @@ Java IO 流的 40 多个类都是从如下 4 个抽象类基类中派生出来�
 * 常用方法
 
   * `read()`：返回输入流中下一个字节的数据。返回的值介于 0 到 255 之间。如果未读取任何字节，则代码返回 `-1` ，表示文件结束。
-  * `read(byte b[ ])` : 从输入流中读取一些字节存储到数组 `b` 中。如果数组 `b` 的长度为零，则不读取。如果没有可用字节读取，返回 `-1`。如果有可用字节读取，则最多读取的字节数最多等于 `b.length` ， 返回读取的字节数。这个方法等价于 `read(b, 0, b.length)`。
+  * `read(byte b[])` : 从输入流中读取一些字节存储到数组 `b` 中。如果数组 `b` 的长度为零，则不读取。如果没有可用字节读取，返回 `-1`。如果有可用字节读取，则最多读取的字节数最多等于 `b.length` ， 返回读取的字节数。这个方法等价于 `read(b, 0, b.length)`。
   * `read(byte b[], int off, int len)`：在 `read(byte b[ ])` 方法的基础上增加了 `off` 参数（偏移量）和 `len` 参数（要读取的最大字节数）。
   * `skip(long n)`：忽略输入流中的 n 个字节 ,返回实际忽略的字节数。
   * `available()`：返回输入流中可以读取的字节数。
@@ -34,7 +121,7 @@ Java IO 流的 40 多个类都是从如下 4 个抽象类基类中派生出来�
   ```
 * `ObjectInputStream` 用于从输入流中读取 Java 对象（反序列化），`ObjectOutputStream` 用于将对象写入到输出流(序列化)
 
-### OutputStream（字节输入流）
+### OutputStream（字节输出流）
 
 用于将数据（字节信息）写入到目的地（通常是文件），`java.io.OutputStream`抽象类是所有字节输出流的父类
 
@@ -224,7 +311,7 @@ UNIX 系统下， IO 模型一共有 5 种： **同步阻塞 I/O** 、 **同步�
 * ![1760318744342](image/IO/1760318744342.png)
 * I/O多路复用IO
 
-  * 多路复用模型中，线程首先发起 select 调用，询问内核数据是否准备就绪，等内核把数据准备好了，用户线程再发起 read 调用。read 调用的过程（数据从内核空间 -> 用户空间）还是阻塞的。
+  * 多路复用模型中，线程首先发起 select 调用，询问内核数据是否准备就绪，等内核把数据准备好了，用户线程再发起 read 调用。read 调用的过程（数据从内核空间 -> 用户空间）还是阻塞的.
   * **IO 多路复用模型，通过减少无效的系统调用，减少了对 CPU 资源的消耗。**
   * Java 中的 NIO ，有一个**选择器 ( Selector )** 的概念，也可以被称为  **多路复用器** 。通过它，只需要一个线程便可以管理多个客户端连接。当客户端数据到了之后，才会为其服务。
 
@@ -232,7 +319,7 @@ UNIX 系统下， IO 模型一共有 5 种： **同步阻塞 I/O** 、 **同步�
 
 #### AIO(Asynchronous I/O)
 
-AIO 是异步 IO 是，基于事件和回调机制实现的，也就是应用操作之后会直接返回，不会堵塞在那里，当后台处理完成，操作系统会通知相应的线程进行后续的操作。
+AIO 是异步 IO 是，基于事件 and 回调机制实现的，也就是应用操作之后会直接返回，不会堵塞在那里，当后台处理完成，操作系统会通知相应的线程进行后续的操作。
 
 ![1760319216836](image/IO/1760319216836.png)
 
@@ -240,7 +327,7 @@ AIO 是异步 IO 是，基于事件和回调机制实现的，也就是应用操
 
 * 使用 NIO 并不一定意味着高性能，它的性能优势主要体现在高并发和高延迟的网络环境下。当连接数较少、并发程度较低或者网络传输速度较快时，NIO 的性能并不一定优于传统的 BIO 。
 * 核心组件
-  * **Buffer（缓冲区）** ：NIO 读写数据都是通过缓冲区进行操作的。读操作的时候将 Channel 中的数据填充到 Buffer 中，而写操作时将 Buffer 中的数据写入到 Channel 中。
+  * **Buffer（缓冲区）** ：NIO 读写数据都是通过缓冲区进行操作 of。读操作的时候将 Channel 中的数据填充到 Buffer 中，而写操作时将 Buffer 中的数据写入到 Channel 中。
   * **Channel（通道）** ：Channel 是一个双向的、可读可写的数据传输通道，NIO 通过 Channel 来实现数据的输入输出。通道是一个抽象的概念，它可以代表文件、套接字或者其他数据源之间的连接。
   * **Selector（选择器）** ：允许一个线程处理多个 Channel，基于事件驱动的 I/O 多路复用模型。所有的 Channel 都可以注册到 Selector 上，由 Selector 来分配线程来处理事件。
 
@@ -270,8 +357,6 @@ AIO 是异步 IO 是，基于事件和回调机制实现的，也就是应用操
 * Buffer 有读模式和写模式这两种模式，分别用于从 Buffer 中读取数据或者向 Buffer 中写入数据。Buffer 被创建之后默认是写模式，调用 `flip()` 可以切换到读模式。如果要再次切换回写模式，可以调用 `clear()` 或者 `compact()` 方法。
 * ![1760321487517](image/IO/1760321487517.png)
 * ![1760321502631](image/IO/1760321502631.png)
-
-
 * 重要方法
 
   * `get` : 读取缓冲区的数据
