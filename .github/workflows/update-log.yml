@@ -40,19 +40,17 @@ jobs:
             echo "" >> update_log.md
           fi
           
-          # 读取现有的更新日志内容
-          EXISTING_CONTENT=$(cat update_log.md 2>/dev/null || echo "")
+          # 读取并清理现有的内容（移除 \r）
+          EXISTING_CONTENT=$(cat update_log.md | tr -d '\r')
           
-          # 提取已记录的提交哈希（避免重复）
-          # 格式：`hash` 或 [hash]，提取7位短哈希
-          RECORDED_HASHES=$(echo "$EXISTING_CONTENT" | grep -oE '`[a-f0-9]{7}`|\[[a-f0-9]{7}\]' | sed 's/[`\[\]]//g' || echo "")
+          # 提取已记录的提交哈希（7位短哈希）
+          RECORDED_HASHES=$(echo "$EXISTING_CONTENT" | grep -oE '`[a-f0-9]{7}`|\[[a-f0-9]{7}\]' | sed 's/[`\[\]]//g' | sort -u || echo "")
           
-          # 获取从起始日期到现在的所有提交
-          ALL_COMMITS=$(git log --since="$START_DATE" --pretty=format:"%H|%ad|%an|%s" --date=format:"%Y-%m-%d %H:%M:%S" --reverse)
+          # 获取提交记录，过滤掉 CI 自身的提交
+          ALL_COMMITS=$(git log --since="$START_DATE" --pretty=format:"%H|%ad|%an|%s" --date=format:"%Y-%m-%d %H:%M:%S" --grep="chore: 自动更新日志" --invert-grep)
           
-          # 检查是否有新提交
           if [ -z "$ALL_COMMITS" ]; then
-            echo "没有找到 $START_DATE 之后的提交"
+            echo "没有找到需要记录的提交"
             echo "has_changes=false" >> $GITHUB_OUTPUT
             exit 0
           fi
@@ -60,86 +58,63 @@ jobs:
           # 过滤出未记录的提交
           NEW_COMMITS=""
           while IFS='|' read -r hash date author message; do
-            # 获取短哈希（7位）
             SHORT_HASH=$(echo "$hash" | cut -c1-7)
-            # 检查这个短哈希是否已记录
             if ! echo "$RECORDED_HASHES" | grep -q "^$SHORT_HASH$"; then
-              if [ -z "$NEW_COMMITS" ]; then
-                NEW_COMMITS="$hash|$date|$author|$message"
-              else
-                NEW_COMMITS="$NEW_COMMITS"$'\n'"$hash|$date|$author|$message"
-              fi
+              NEW_COMMITS="${NEW_COMMITS}${hash}|${date}|${author}|${message}"$'\n'
             fi
           done <<< "$ALL_COMMITS"
           
-          # 如果没有新提交，退出
-          if [ -z "$NEW_COMMITS" ]; then
-            echo "所有提交已记录，无需更新"
+          if [ -z "$(echo "$NEW_COMMITS" | tr -d ' \n')" ]; then
+            echo "所有提交已记录"
             echo "has_changes=false" >> $GITHUB_OUTPUT
             exit 0
           fi
           
-          # 创建临时文件存储新日志条目
+          # 生成新条目文本
           TEMP_NEW=$(mktemp)
-          TEMP_COMMITS=$(mktemp)
-          echo "$NEW_COMMITS" > "$TEMP_COMMITS"
-          
-          # 按日期分组新提交（使用进程替换避免子shell问题）
           CURRENT_DATE=""
-          while IFS='|' read -r hash date author message <&3; do
+          while IFS='|' read -r hash date author message; do
+            [ -z "$hash" ] && continue
             COMMIT_DATE=$(echo "$date" | cut -d' ' -f1)
             SHORT_HASH=$(echo "$hash" | cut -c1-7)
             TIME=$(echo "$date" | cut -d' ' -f2)
             
-            # 如果是新的日期，添加日期标题
             if [ "$COMMIT_DATE" != "$CURRENT_DATE" ]; then
-              if [ -n "$CURRENT_DATE" ]; then
-                echo "" >> "$TEMP_NEW"
-              fi
+              [ -n "$CURRENT_DATE" ] && echo "" >> "$TEMP_NEW"
               echo "## $COMMIT_DATE" >> "$TEMP_NEW"
               echo "" >> "$TEMP_NEW"
               CURRENT_DATE="$COMMIT_DATE"
             fi
-            
-            # 添加提交记录（包含时间、提交信息和短哈希，短哈希用于后续去重）
             echo "- $TIME - $message [\`$SHORT_HASH\`]" >> "$TEMP_NEW"
-          done 3< "$TEMP_COMMITS"
+          done <<< "$NEW_COMMITS"
           
-          # 读取新生成的日志条目
-          NEW_ENTRIES=$(cat "$TEMP_NEW" 2>/dev/null || echo "")
-          rm "$TEMP_NEW" "$TEMP_COMMITS"
+          # 提取旧内容的 Body（去掉 Header 和第一行日期，如果新内容已经包含了该日期）
+          FIRST_NEW_DATE=$(head -n 1 "$TEMP_NEW" | sed 's/## //')
           
-          # 构建新的更新日志
-          # 保留文件头（如果有）
-          if echo "$EXISTING_CONTENT" | grep -q "^# 更新日志"; then
+          if echo "$EXISTING_CONTENT" | grep -q "^## "; then
             HEADER=$(echo "$EXISTING_CONTENT" | sed -n '1,/^## /p' | sed '$d')
             BODY=$(echo "$EXISTING_CONTENT" | sed -n '/^## /,$p')
+            
+            # 如果 BODY 的第一个日期标题和 NEW_ENTRIES 的最后一个日期标题相同，则移除 BODY 的标题
+            LAST_NEW_DATE_HEADER=$(grep "^## " "$TEMP_NEW" | tail -n 1)
+            if [ -n "$LAST_NEW_DATE_HEADER" ] && echo "$BODY" | head -n 1 | grep -q "^$LAST_NEW_DATE_HEADER$"; then
+              BODY=$(echo "$BODY" | sed '1,2d') # 移除日期标题和紧随其后的空行
+            fi
           else
-            HEADER="# 更新日志"$'\n'""$'\n'"> 自动生成，记录 $START_DATE 之后的更新"$'\n'""
+            HEADER="$EXISTING_CONTENT"
             BODY=""
           fi
           
-          # 合并：新条目 + 现有内容
+          # 合并并写入
           {
             echo "$HEADER"
             echo ""
-            if [ -n "$NEW_ENTRIES" ]; then
-              echo "$NEW_ENTRIES"
-              echo ""
-            fi
-            if [ -n "$BODY" ]; then
-              echo "$BODY"
-            fi
-          } > update_log.md
+            cat "$TEMP_NEW"
+            echo ""
+            [ -n "$BODY" ] && echo "$BODY"
+          } | sed '/^$/N;/^\n$/D' > update_log.md # 使用 sed 压缩连续空行
           
-          # 检查是否有实际更改
-          if git diff --quiet update_log.md; then
-            echo "更新日志没有变化"
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-          else
-            echo "更新日志已生成，添加了新的提交记录"
-            echo "has_changes=true" >> $GITHUB_OUTPUT
-          fi
+          echo "has_changes=true" >> $GITHUB_OUTPUT
       
       - name: 提交并推送更新
         if: steps.generate-log.outputs.has_changes == 'true'
@@ -147,4 +122,3 @@ jobs:
           git add update_log.md
           git commit -m "chore: 自动更新日志 [skip ci]" || exit 0
           git push || exit 0
-
